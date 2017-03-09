@@ -18,7 +18,7 @@ library(slam)
 library(tm)
 
 # Load Intermediate data
-path <- paste(getwd(), "/en_US", sep = "")
+path <- paste(getwd(), "/samples", sep = "")
 vcorpus <- Corpus(DirSource(path, pattern = "*.sample"),
                   readerControl = list(reader = readPlain,
                                       language = "en",
@@ -46,10 +46,11 @@ vcorpus <- tm_map(vcorpus, stripWhitespace)
 # Generate n-gram models
 ngramGenerator <- function(corpus, ng) {
   ngramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = ng, max = ng))
-  tdm <- TermDocumentMatrix(corpus, control = list(tokenize = ngramTokenizer))
+  tdm <- TermDocumentMatrix(corpus, control = list(tokenize = ngramTokenizer,
+                                                   wordLengths = c(1, Inf)))
 }
 
-unigram_tdm <- TermDocumentMatrix(vcorpus)
+unigram_tdm <- ngramGenerator(vcorpus, 1)
 saveRDS(unigram_tdm, "unigram_tdm.rds", ascii = TRUE)
 
 bigram_tdm <- ngramGenerator(vcorpus, 2)
