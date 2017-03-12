@@ -6,8 +6,8 @@
 # lower-case letters can help improve an analysis. Data cleaning also includes removing 
 # twitter characters (@ and #), numbers, white spaces, and punctuations.
 #
-# After data are processed, unigram, bigram, trigram, and fourgram models are generated
-# and saved into RDS files. 
+# After data are processed, unigram, bigram, trigram, fourgram, and fivegram models
+# are generated and saved into RDS files. 
 ##########################################################################################
 
 # Load required libraries 
@@ -61,3 +61,7 @@ saveRDS(trigram_tdm, "trigram_tdm.rds", ascii = TRUE)
 
 fourgram_tdm <- ngramGenerator(vcorpus, 4)
 saveRDS(fourgram_tdm, "fourgram_tdm.rds", ascii = TRUE)
+
+fivegram_tdm <- ngramGenerator(vcorpus, 5)
+saveRDS(fivegram_tdm, "fivegram_tdm.rds", ascii = TRUE)
+

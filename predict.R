@@ -1,8 +1,11 @@
 ##########################################################################################
 # File: predict.R
 #
-# Description:
-# 
+# Description: 
+# Predict a next word based on previouos words using stupid backoff algorithm
+#
+# Note highest ngram of 5 is performed pooriler than highest ngram of 4 in q2_set
+# (4/10 vs 3/10)
 ##########################################################################################
 
 # Load required libraries
@@ -12,7 +15,7 @@ library(data.table)
 
 # Configuration
 RANK_SIZE <- 5
-HIGHEST_NGRAM <- 4
+HIGHEST_NGRAM <- 5
 
 # Load unigram hash and n-gram models with calculated stupid_backoff
 unigram_hash <- readRDS("./rds/unigram_hash.rds")
@@ -21,6 +24,7 @@ unigram <- readRDS("./rds/unigram_backoff.rds")
 bigram <- readRDS("./rds/bigram_backoff.rds")
 trigram <- readRDS("./rds/trigram_backoff.rds")
 fourgram <- readRDS("./rds/fourgram_backoff.rds")
+fivegram <- readRDS("./rds/fivegram_backoff.rds")
 
 # Create the toSpace content transformer
 toSpace <- content_transformer(function(x, pattern) {return (gsub(pattern, " ", x))})
@@ -148,8 +152,29 @@ select_top_scores_from_fourgram <- function(model, lambda, words, dt) {
 
   # Update ranked top words  
   for (row in 1:rows) {
-    word_index <- selected_words[row, w4] * lambda
-    backoff_score <- selected_words[row, backoff_score]
+    word_index <- selected_words[row, w4]
+    backoff_score <- selected_words[row, backoff_score] * lambda
+    update_top_scores(dt, word_index, backoff_score)
+  }
+}
+
+select_top_scores_from_fivegram <- function(model, lambda, words, dt) {
+  # Select top words matched given words
+  selected_words <- model[w1 == words[1] & w2 == words[2] & w3 == words[3] & w4 == words[4]]
+  rows <- nrow(selected_words)
+  
+  # Validate selected words
+  if (rows == 0) {
+    return()
+  } 
+  else if (rows > RANK_SIZE) {
+    rows <- RANK_SIZE;
+  }
+  
+  # Update ranked top words  
+  for (row in 1:rows) {
+    word_index <- selected_words[row, w5]
+    backoff_score <- selected_words[row, backoff_score] * lambda
     update_top_scores(dt, word_index, backoff_score)
   }
 }
@@ -169,7 +194,10 @@ stupid_backoff_ranking <- function(words) {
     input <- tail(words, ng - 1)
     print(c(ng, input))
     
-    if (ng == 4) {
+    if (ng == 5) {
+      select_top_scores_from_fivegram(fivegram, lambda, input, ranked_dt)
+    }
+    else if (ng == 4) {
       select_top_scores_from_fourgram(fourgram, lambda, input, ranked_dt)
     }
     else if (ng == 3) {
@@ -210,7 +238,7 @@ q2_set <- c("When you breathe, I want to be the air for you. I'll be there for y
             "I’m thankful my childhood was filled with imagination and bruises from playing",
             "I like how the same people are in almost all of Adam Sandler's")
 
-for (sentence in q1_set) {
+for (sentence in q2_set) {
   print(sentence)
   words <- transform_string(sentence)
   print(words)

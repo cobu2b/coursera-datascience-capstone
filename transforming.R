@@ -17,6 +17,7 @@ unigram_tdm <- readRDS("./rds/unigram_tdm.rds")
 bigram_tdm <- readRDS("./rds/bigram_tdm.rds")
 trigram_tdm <- readRDS("./rds/trigram_tdm.rds")
 fourgram_tdm <- readRDS("./rds/fourgram_tdm.rds")
+fivegram_tdm <- readRDS("./rds/fivegram_tdm.rds")
 
 # Calculate Frequency words
 getFreqs <- function(tdm) {
@@ -27,15 +28,18 @@ unigram <- getFreqs(unigram_tdm)
 bigram <- getFreqs(bigram_tdm)
 trigram <- getFreqs(trigram_tdm)
 fourgram <- getFreqs(fourgram_tdm)
+fivegram <- getFreqs(fivegram_tdm)
 
 # N-gram pruning
 # - Remove singlestons on bigram, trigram, and fourgram
 colnames(bigram) <- c("rn", "count")
 colnames(trigram) <- c("rn", "count")
 colnames(fourgram) <- c("rn", "count")
+colnames(fivegram) <- c("rn", "count")
 bigram <- bigram[count > 1]
 trigram <- trigram[count > 1]
 fourgram <- fourgram[count > 1]
+fivegram <- fivegram[count > 1]
 
 # Create unigram hash
 index <- 1
@@ -71,8 +75,10 @@ indexing <- function(dt, ngram) {
     }
     if (ngram > 3) {
       dt[index, w4 := unigram_hash[[word_list[4]]]]
-    }    
-    
+    }
+    if (ngram > 4) {
+      dt[index, w5 := unigram_hash[[word_list[5]]]]
+    }
     
     index <- index + 1
   }
@@ -95,3 +101,9 @@ fourgram <- cbind(w1=0, w2=0, w3 = 0, w4 = 0, fourgram)
 indexing(fourgram, 4)
 fourgram$rn <- NULL
 saveRDS(fourgram, "fourgram.rds")
+
+# Fivegram
+fivegram <- cbind(w1=0, w2=0, w3 = 0, w4 = 0, w5 = 0, fivegram)
+indexing(fivegram, 5)
+fivegram$rn <- NULL
+saveRDS(fivegram, "fivegram.rds")

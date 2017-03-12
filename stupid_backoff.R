@@ -2,11 +2,10 @@
 # File: stupid_backoff.R
 #
 # Description:
-# 
+# Calculate stupid backoff score
 ##########################################################################################
 
 # Load required libraries 
-library(hash)
 library(data.table)
 
 # Load n-gram models
@@ -14,6 +13,7 @@ unigram <- readRDS("./rds/unigram.rds")
 bigram <- readRDS("./rds/bigram.rds")
 trigram <- readRDS("./rds/trigram.rds")
 fourgram <- readRDS("./rds/fourgram.rds")
+fivegram <- readRDS("./rds/fivegram.rds")
 
 # Calculate scores of each models
 stupid_backoff_scoring <- function(model, ngram, ngram_dt) {
@@ -69,3 +69,13 @@ fourgram$backoff_score <- fourgram$count
 #stupid_backoff_scoring(fourgram, 3, trigram)
 fourgram[, backoff_score := mapply(stupid_backoff_scoring_fourgram, w1, w2, w3, count)]
 saveRDS(fourgram, "fourgram_backoff.rds")
+
+# Fivegram
+stupid_backoff_scoring_fivegram <- function(ng_w1, ng_w2, ng_w3, ng_w4, ng_count) {
+  ngram_count <- fourgram[w1 == ng_w1 & w2 == ng_w2 & w3 == ng_w3 & w4 == ng_w4]$count
+  ng_count/ngram_count
+}
+
+fivegram$backoff_score <- fivegram$count
+fivegram[, backoff_score := mapply(stupid_backoff_scoring_fivegram, w1, w2, w3, w4, count)]
+saveRDS(fivegram, "fivegram_backoff.rds")
