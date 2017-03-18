@@ -1,5 +1,6 @@
 # Load required libraries
 library(shiny)
+library(ggplot2)
 library(tm)
 library(hash)
 library(data.table)
@@ -15,6 +16,7 @@ unigram <- readRDS("./rds/unigram_backoff.rds")
 bigram <- readRDS("./rds/bigram_backoff.rds")
 trigram <- readRDS("./rds/trigram_backoff.rds")
 fourgram <- readRDS("./rds/fourgram_backoff.rds")
+bos <- readRDS("./rds/bos_backoff.rds")
 
 # Create the toSpace content transformer
 toSpace <- content_transformer(function(x, pattern) {return (gsub(pattern, " ", x))})
@@ -40,7 +42,8 @@ transform_string <- function(string) {
   
   word_list <- strsplit(vcorpus[[1]]$content, " ")[[1]]
   
-  return(word_list)
+  # Remove an empty string on the word list
+  return(word_list[word_list != ""])
 }
 
 to_hash <- function(words) {
@@ -148,9 +151,9 @@ select_top_scores_from_fourgram <- function(model, lambda, words, dt) {
   }
 }
 
-stupid_backoff_ranking <- function(words) {
+stupid_backoff_ranking <- function(words, max_ngram) {
   lambda <- 1
-  ngram <- HIGHEST_NGRAM
+  ngram <- max_ngram
   ranked_dt <- data.table(word_index = rep("", RANK_SIZE), 
                           score = rep(double(1), RANK_SIZE))
   
@@ -181,16 +184,53 @@ stupid_backoff_ranking <- function(words) {
   return(ranked_dt)
 }
 
-shinyServer(function(input, output) {
+#default_ranked_dt <- data.table(word = unigram_words[1:RANK_SIZE],
+#                                score = unigram[1:RANK_SIZE]$backoff_score)
+#default_ranked_dt$word <- factor(default_ranked_dt$word,
+#                                 levels = unique(default_ranked_dt$word))
+default_ranked_dt <- bos[1:RANK_SIZE]
+default_ranked_dt$word <- factor(default_ranked_dt$word,
+                                 levels = unique(default_ranked_dt$word))
+
+shinyServer(function(input, output, session) {
   topwords <- reactive({
-    req(input$textinput)
-        
-    words <- transform_string(input$textinput)
-    hash_words <- to_hash(words)
-    ranked_dt <- stupid_backoff_ranking(hash_words)
-    ranked_dt[, word := unigram_words[as.numeric(word_index)]]
-    return(ranked_dt$word)
+    ranked_dt <- default_ranked_dt
+    
+    if (input$textinput != "") {
+      # Processed input text should have a least one word
+      words <- transform_string(input$textinput)
+      
+      if (length(words) > 0 && sum(words == "") == 0) {
+        hash_words <- to_hash(words)
+        ranked_dt <- stupid_backoff_ranking(hash_words, HIGHEST_NGRAM)
+        ranked_dt[, word := unigram_words[as.numeric(word_index)]]
+        ranked_dt$word <- factor(ranked_dt$word, levels = unique(ranked_dt$word))
+      }
+    }
+    
+    return(ranked_dt)
   })
   
-  output$value <- renderPrint({topwords()})
+  output$plotTopwords <- renderPlot({
+    g <- ggplot(topwords(), aes(x = word, y = score))
+    g <- g + geom_bar(stat="identity")
+    g <- g + labs(x = "Top words", y = "Score")
+    print(g)
+  })
+  
+  observeEvent(input$selectWord, {
+    updateTextInput(session, "textinput", 
+                    value = paste(input$textinput, input$selectWord))
+  })
+  
+  observe({
+    # Update the select input choices
+    ranked_dt <- topwords()
+    req(ranked_dt)
+    
+    updateRadioButtons(session, "selectWord",
+                       choices = ranked_dt$word,
+                       selected = character(0))
+    
+  })
 })

@@ -16,6 +16,7 @@ options(mc.cores=1)
 library(RWeka)
 library(slam)
 library(tm)
+library(openNLP)
 
 # Load Intermediate data
 path <- paste(getwd(), "/samples", sep = "")
@@ -47,6 +48,7 @@ vcorpus <- tm_map(vcorpus, stripWhitespace)
 ngramGenerator <- function(corpus, ng) {
   ngramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = ng, max = ng))
   tdm <- TermDocumentMatrix(corpus, control = list(tokenize = ngramTokenizer,
+                                                   tolower = FALSE,
                                                    wordLengths = c(1, Inf)))
 }
 

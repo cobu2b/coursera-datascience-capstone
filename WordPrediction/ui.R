@@ -11,8 +11,12 @@ shinyUI(fluidPage(
     )
   ),
   fluidRow(
-    column(12,
-           verbatimTextOutput("value")
+    column(6,
+           plotOutput("plotTopwords")
+    ),
+    column(6,
+           radioButtons("selectWord", label = "Select the top word to be inserted",
+                        choices = character(0), selected = character(0))
     )
   )
 ))
