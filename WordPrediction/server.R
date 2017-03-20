@@ -186,8 +186,6 @@ stupid_backoff_ranking <- function(words, max_ngram) {
 
 #default_ranked_dt <- data.table(word = unigram_words[1:RANK_SIZE],
 #                                score = unigram[1:RANK_SIZE]$backoff_score)
-#default_ranked_dt$word <- factor(default_ranked_dt$word,
-#                                 levels = unique(default_ranked_dt$word))
 default_ranked_dt <- bos[1:RANK_SIZE]
 default_ranked_dt$word <- factor(default_ranked_dt$word,
                                  levels = unique(default_ranked_dt$word))
@@ -231,6 +229,5 @@ shinyServer(function(input, output, session) {
     updateRadioButtons(session, "selectWord",
                        choices = ranked_dt$word,
                        selected = character(0))
-    
   })
 })
