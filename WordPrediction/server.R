@@ -57,15 +57,15 @@ to_hash <- function(words) {
 }
 
 update_top_scores <- function(dt, word, backoff_score) {
-  # Compare same word or last word of the top words
-  row <- which(dt$word_index == word)[1]
-  if (is.na(row)) {
-    row <- RANK_SIZE
+  # New word must not exist in the top words
+  if (sum(dt$word_index == word) > 0) {
+    return()
   }
-  
-  if (backoff_score > dt[row, score]) {
-    dt[row, word_index := as.character(word)]
-    dt[row, score := backoff_score]
+
+
+  if (backoff_score > dt[RANK_SIZE, score]) {
+    dt[RANK_SIZE, word_index := as.character(word)]
+    dt[RANK_SIZE, score := backoff_score]
     
     setorder(dt, -score)
   }
@@ -177,7 +177,7 @@ stupid_backoff_ranking <- function(words, max_ngram) {
     else {
       select_top_scores_from_unigram(unigram, lambda, ranked_dt)
     }
-    
+
     lambda <- lambda * 0.4    
   }
   
