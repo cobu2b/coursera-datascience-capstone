@@ -2,7 +2,8 @@
 # File: performance_tester.R
 #
 # Description:
-#
+# Running the given model and compare testset result. The testset is generated using
+# shuf for selecting 1,000 samples of each testset (blogs, news, and twitter).
 ##########################################################################################
 
 # Load required libraries 
@@ -18,12 +19,15 @@ source("predict.R")
 # Load test set
 path <- paste(getwd(), "/samples/en_US.blogs.txt.testset", sep = "")
 blogs <- readLines(path, encoding = "UTF-8")
+blogs <- iconv(blogs, "UTF-8", "ASCII", "")
 
 path <- paste(getwd(), "/samples/en_US.news.txt.testset", sep = "")
 news <- readLines(path, encoding = "UTF-8")
+news <- iconv(news, "UTF-8", "ASCII", "")
 
 path <- paste(getwd(), "/samples/en_US.twitter.txt.testset", sep = "")
 twitter <- readLines(path, encoding = "UTF-8")
+twitter <- iconv(twitter, "UTF-8", "ASCII", "")
 
 stupid_backoff_accuracy <- function(testset) {
   # Initial performance data
@@ -122,3 +126,5 @@ accuracy_result$best_match <- as.integer(accuracy_result$best_match)
 accuracy_result$other_match <- as.integer(accuracy_result$other_match)
 accuracy_result$error <- as.integer(accuracy_result$error)
 accuracy_result$total <- as.integer(accuracy_result$total)
+row.names(accuracy_result) <- NULL
+saveRDS(accuracy_result, "accuracy_result.rds")
