@@ -127,4 +127,18 @@ accuracy_result$other_match <- as.integer(accuracy_result$other_match)
 accuracy_result$error <- as.integer(accuracy_result$error)
 accuracy_result$total <- as.integer(accuracy_result$total)
 row.names(accuracy_result) <- NULL
+accuracy_result <- rbind(accuracy_result, c("all", sum(accuracy_result$best_match),
+                                                   sum(accuracy_result$other_match),
+                                                   sum(accuracy_result$error),
+                                                   sum(accuracy_result$total)))
+accuracy_result$best_match <- as.integer(accuracy_result$best_match)
+accuracy_result$other_match <- as.integer(accuracy_result$other_match)
+accuracy_result$error <- as.integer(accuracy_result$error)
+accuracy_result$total <- as.integer(accuracy_result$total)
 saveRDS(accuracy_result, "accuracy_result.rds")
+
+accuracy_result_percentage <- accuracy_result
+accuracy_result_percentage[, 2:4] <- signif(accuracy_result[, 2:4]/accuracy_result$total*100, 4)
+accuracy_result_percentage$total <- NULL
+saveRDS(accuracy_result_percentage, "accuracy_result_percentage.rds")
+write.table(accuracy_result_percentage, "accuracy_result_percentage.csv")

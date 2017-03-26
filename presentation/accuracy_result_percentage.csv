@@ -1,0 +1,5 @@
+"testset" "best_match" "other_match" "error"
+"1" "blogs" 14.4 10.8 74.8
+"2" "news" 20.3 11.9 67.8
+"3" "twitter" 14.5 12.5 73
+"4" "all" 16.4 11.73 71.87
